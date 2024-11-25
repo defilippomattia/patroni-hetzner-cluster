@@ -1,0 +1,4 @@
+variables.tfvars
+*.tfstate
+*.tfstate.backup
+hosts.ini
