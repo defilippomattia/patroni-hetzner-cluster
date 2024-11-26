@@ -1,0 +1,23 @@
+- name: Install basic packages
+  hosts: all
+  become: true
+  tasks:
+    - name: Update all packages to the latest version
+      dnf:
+        name: "*"
+        state: latest
+
+    - name: Install basic packages
+      dnf:
+        name:
+          - tar
+          - vim
+          - unzip
+          - wget
+        state: present
+
+    - name: Set timezone and locale
+      #logout and login to apply changes
+      shell: |
+        timedatectl set-timezone Europe/Zagreb
+        localectl set-locale LC_TIME="C.UTF-8"
