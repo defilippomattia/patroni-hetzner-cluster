@@ -1,0 +1,102 @@
+---
+- name: Install and configure etcd on RHEL
+  hosts: all
+  become: true
+
+  vars:
+    etcd_version: "v3.5.16"
+    etcd_download_url: "https://github.com/etcd-io/etcd/releases/download/{{ etcd_version }}/etcd-{{ etcd_version }}-linux-amd64.tar.gz"
+    etcd_bin_path: "/usr/local/bin"
+    etcd_data_dir: "/var/lib/etcd"
+    etcd_service_path: "/etc/systemd/system/etcd.service"
+
+  tasks:
+    - name: Create etcd user and group
+      user:
+        name: etcd
+        shell: /sbin/nologin
+        create_home: no
+        state: present
+
+    - name: Download etcd binary
+      get_url:
+        url: "{{ etcd_download_url }}"
+        dest: /tmp/etcd.tar.gz
+        mode: "0644"
+
+    - name: Extract etcd binary
+      unarchive:
+        src: /tmp/etcd.tar.gz
+        dest: /tmp
+        remote_src: yes
+
+    - name: Move binaries to /usr/local/bin
+      copy:
+        remote_src: yes
+        src: "/tmp/etcd-{{ etcd_version }}-linux-amd64/etcd"
+        dest: "{{ etcd_bin_path }}/etcd"
+        mode: "0755"
+
+    - name: Move etcdctl binary to /usr/local/bin
+      copy:
+        remote_src: yes
+        src: "/tmp/etcd-{{ etcd_version }}-linux-amd64/etcdctl"
+        dest: "{{ etcd_bin_path }}/etcdctl"
+        mode: "0755"
+
+    - name: Ensure etcd data directory exists
+      file:
+        path: "{{ etcd_data_dir }}"
+        state: directory
+        owner: etcd
+        group: etcd
+        mode: "0755"
+
+    - name: Create systemd service file for etcd
+      copy:
+        dest: "{{ etcd_service_path }}"
+        content: |
+          [Unit]
+          Description=etcd key-value store
+          Documentation=https://github.com/etcd-io/etcd
+          After=network-online.target local-fs.target remote-fs.target time-sync.target
+          Wants=network-online.target local-fs.target remote-fs.target time-sync.target
+
+          [Service]
+          User=etcd
+          Type=notify
+          Environment=ETCD_DATA_DIR={{ etcd_data_dir }}
+          Environment=ETCD_NAME=%m
+          ExecStart={{ etcd_bin_path }}/etcd
+          Restart=always
+          RestartSec=10s
+          LimitNOFILE=40000
+
+          [Install]
+          WantedBy=multi-user.target
+        owner: root
+        group: root
+        mode: "0644"
+
+    - name: Reload systemd daemon
+      command: systemctl daemon-reload
+
+    - name: Enable etcd service
+      systemd:
+        name: etcd
+        enabled: true
+
+    - name: Start etcd service
+      systemd:
+        name: etcd
+        state: started
+
+    - name: Clean up temporary files
+      file:
+        path: /tmp/etcd.tar.gz
+        state: absent
+
+    - name: Clean up temporary extracted files
+      file:
+        path: "/tmp/etcd-{{ etcd_version }}-linux-amd64"
+        state: absent

@@ -1,0 +1,22 @@
+- name: Install PostgreSQL 17
+  hosts: all
+  become: true
+  tasks:
+    - name: Install repository key
+      rpm_key:
+        key: https://download.postgresql.org/pub/repos/yum/keys/PGDG-RPM-GPG-KEY-RHEL
+        state: present
+
+    - name: Install pgdg repository package
+      yum:
+        name: https://download.postgresql.org/pub/repos/yum/reporpms/EL-9-x86_64/pgdg-redhat-repo-latest.noarch.rpm
+        state: present
+
+    - name: Disable built-in PostgreSQL module
+      ansible.builtin.command:
+        cmd: dnf -qy module disable postgresql
+
+    - name: Install PostgreSQL 17 server
+      ansible.builtin.yum:
+        name: postgresql17-server
+        state: present
