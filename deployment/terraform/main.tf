@@ -77,16 +77,6 @@ resource "hcloud_firewall" "phc_firewall" {
     ]
   }
 
-  rule {
-    direction = "in"
-    protocol  = "tcp"
-    port      = "5432"
-    source_ips = [
-      "0.0.0.0/0",
-      "::/0"
-    ]
-  }
-
   labels = {
     "created-by" : "terraform"
   }
