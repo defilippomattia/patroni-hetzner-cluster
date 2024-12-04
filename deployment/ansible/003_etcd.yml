@@ -65,8 +65,17 @@
           [Service]
           User=etcd
           Type=notify
+
           Environment=ETCD_DATA_DIR={{ etcd_data_dir }}
-          Environment=ETCD_NAME=%m
+          Environment=ETCD_NAME={{ inventory_hostname }}
+          Environment=ETCD_INITIAL_ADVERTISE_PEER_URLS=http://{{ hostvars[inventory_hostname].private_ip }}:2380
+          Environment=ETCD_LISTEN_PEER_URLS=http://{{ hostvars[inventory_hostname].private_ip }}:2380
+          Environment=ETCD_LISTEN_CLIENT_URLS=http://{{ hostvars[inventory_hostname].private_ip }}:2379,http://127.0.0.1:2379
+          Environment=ETCD_ADVERTISE_CLIENT_URLS=http://{{ hostvars[inventory_hostname].private_ip }}:2379
+          Environment=ETCD_INITIAL_CLUSTER_TOKEN=phctoken
+          Environment=ETCD_INITIAL_CLUSTER=node1=http://10.10.120.11:2380,node2=http://10.10.120.12:2380,node3=http://10.10.120.13:2380
+          Environment=ETCD_INITIAL_CLUSTER_STATE=new
+
           ExecStart={{ etcd_bin_path }}/etcd
           Restart=always
           RestartSec=10s
@@ -100,3 +109,16 @@
       file:
         path: "/tmp/etcd-{{ etcd_version }}-linux-amd64"
         state: absent
+
+    - name: Open etcd ports in firewalld
+      firewalld:
+        port: "{{ item }}"
+        zone: public
+        permanent: true
+        state: enabled
+      loop:
+        - 2379/tcp
+        - 2380/tcp
+
+    - name: Reload firewalld to apply changes
+      command: firewall-cmd --reload

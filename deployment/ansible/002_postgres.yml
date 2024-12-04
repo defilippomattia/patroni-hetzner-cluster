@@ -20,3 +20,13 @@
       ansible.builtin.yum:
         name: postgresql17-server
         state: present
+
+    - name: Open postgres port in firewalld
+      firewalld:
+        port: 5432/tcp
+        zone: public
+        permanent: true
+        state: enabled
+
+    - name: Reload firewalld to apply changes
+      command: firewall-cmd --reload

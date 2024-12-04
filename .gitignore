@@ -2,3 +2,6 @@ variables.tfvars
 *.tfstate
 *.tfstate.backup
 hosts.ini
+architecture.drawio
+notes.log
+deployment/terraform/.terraform
