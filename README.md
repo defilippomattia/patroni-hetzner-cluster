@@ -27,9 +27,9 @@ Patroni and etcd on each node, Postgres on node1 and node2
 ```
 touch ./deployments/ansible/hosts.ini
 [phc-cluster]
-node1 ansible_host=ip1
-node2 ansible_host=ip2 
-node3 ansible_host=ip3
+node1 ansible_host=public_ip1 private_ip=private_ip1
+node2 ansible_host=public_ip2 private_ip=private_ip2
+node3 ansible_host=public_ip3 private_ip=private_ip3
 
 [phc-cluster:vars]
 ansible_ssh_private_key_file=/path/to/your/private/key
