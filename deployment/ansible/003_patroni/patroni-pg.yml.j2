@@ -1,5 +1,5 @@
 scope: phc-cluster
-name: node2
+name: {{ inventory_hostname }}
 namespace: /service/
 
 log:
@@ -50,8 +50,8 @@ bootstrap:
         - createrole
         - createdb
 postgresql:
-  listen: "10.10.120.12:5432"
-  connect_address: "10.10.120.12:5432"
+  listen: "{{ private_ip }}:5432"
+  connect_address: "{{ private_ip }}:5432"
   data_dir: /var/lib/pgsql/data
   pgpass: /tmp/pgpass0
   bin_dir: /usr/pgsql-17/bin

@@ -3,8 +3,6 @@
 
 Deploy a 3 nodes POC Postgres cluster with Patroni and Etcd on Hetzner Cloud.
 
-Patroni and Etcd are deployed on each node, Postgres on two nodes.
-
 I'm not following best practices here (VMs on public internet, some passwords on the repo, etc) but this is just a POC.
 
 # Deployment 
@@ -23,7 +21,6 @@ terraform destroy -var-file="variables.tfvars"
 
 ## Ansible 
 
-Patroni and etcd on each node, Postgres on node1 and node2
 ```
 touch ./deployments/ansible/hosts.ini
 [phc-cluster]
@@ -35,11 +32,11 @@ node3 ansible_host=public_ip3 private_ip=private_ip3
 ansible_ssh_private_key_file=/path/to/your/private/key
 ansible_user=mfilippo
 
-
+cd ./deployments/ansible
 ansible-playbook -i hosts.ini 000_initial_config.yml -e "ansible_ssh_extra_args='-o StrictHostKeyChecking=no'" --ask-become-pass
-ansible-playbook -i hosts.ini 001_patroni.yml -e "ansible_ssh_extra_args='-o StrictHostKeyChecking=no'" --ask-become-pass
-ansible-playbook -i hosts.ini 002_postgres.yml -e "ansible_ssh_extra_args='-o StrictHostKeyChecking=no'" -l node1,node2 --ask-become-pass
-ansible-playbook -i hosts.ini 003_etcd.yml -e "ansible_ssh_extra_args='-o StrictHostKeyChecking=no'" --ask-become-pass
+ansible-playbook -i hosts.ini 001_postgres.yml -e "ansible_ssh_extra_args='-o StrictHostKeyChecking=no'" -l node1,node2 --ask-become-pass
+ansible-playbook -i hosts.ini 002_etcd.yml -e "ansible_ssh_extra_args='-o StrictHostKeyChecking=no'" --ask-become-pass
+ansible-playbook -i hosts.ini 003_patroni/003_patroni.yml -e "ansible_ssh_extra_args='-o StrictHostKeyChecking=no'" --ask-become-pass -l node1,node2
 
 ```
 # Test and document

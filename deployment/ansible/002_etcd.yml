@@ -95,11 +95,6 @@
         name: etcd
         enabled: true
 
-    - name: Start etcd service
-      systemd:
-        name: etcd
-        state: started
-
     - name: Clean up temporary files
       file:
         path: /tmp/etcd.tar.gz
@@ -122,3 +117,8 @@
 
     - name: Reload firewalld to apply changes
       command: firewall-cmd --reload
+
+    - name: Start etcd service
+      systemd:
+        name: etcd
+        state: started

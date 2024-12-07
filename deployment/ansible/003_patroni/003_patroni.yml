@@ -1,0 +1,68 @@
+- name: Install Python, pip, and Patroni
+  hosts: all
+  become: true
+  tasks:
+    - name: Download get-pip.py
+      get_url:
+        url: https://bootstrap.pypa.io/get-pip.py
+        dest: /tmp/get-pip.py
+
+    - name: Install pip using get-pip.py
+      command: python3 /tmp/get-pip.py
+
+    - name: Install Patroni with dependencies (psycopg3, etcd3)
+      pip:
+        name: patroni[psycopg3,etcd3]
+
+    - name: Create directories for Patroni
+      file:
+        path: "{{ item }}"
+        state: directory
+        owner: postgres
+        group: postgres
+        mode: "0755"
+      loop:
+        - /etc/patroni
+        - /var/log/patroni
+
+    - name: Deploy Patroni configuration
+      template:
+        src: patroni-pg.yml.j2
+        dest: /etc/patroni/patroni.yml
+        owner: postgres
+        group: postgres
+        mode: "0644"
+
+    - name: Create systemd service file for patroni
+      copy:
+        dest: /etc/systemd/system/patroni.service
+        content: |
+          [Unit]
+          Description=Runners to orchestrate a high-availability PostgreSQL
+          After=syslog.target network.target 
+
+          [Service]
+          Type=simple 
+          User=postgres
+          Group=postgres 
+
+          ExecStart=/usr/local/bin/patroni /etc/patroni/patroni.yml 
+          ExecReload=/bin/kill -s HUP $MAINPID 
+          KillMode=process 
+          TimeoutSec=30 
+          Restart=no 
+
+          [Install]
+          WantedBy=multi-user.target
+        owner: root
+        group: root
+        mode: "0644"
+
+    - name: Reload systemd daemon
+      command: systemctl daemon-reload
+
+    - name: Enable and start Patroni service
+      systemd:
+        name: patroni
+        enabled: yes
+        state: started
