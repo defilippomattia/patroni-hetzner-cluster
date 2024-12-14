@@ -7,7 +7,11 @@ terraform {
   }
 }
 
-variable "hcloud_token" {
+variable hcloud_token {
+  sensitive = true
+}
+
+variable ssh_fingerprint {
   sensitive = true
 }
 
@@ -16,9 +20,8 @@ provider "hcloud" {
 }
 
 data "hcloud_ssh_key" "phc_ssh_key" {
-  fingerprint = "7b:02:33:f7:2a:49:46:63:06:8e:1f:82:dc:1c:96:9a"
+  fingerprint = var.ssh_fingerprint
 }
-
 
 resource "hcloud_network" "phc_network" {
   name     = "phc-network"
